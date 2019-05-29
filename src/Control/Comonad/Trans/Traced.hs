@@ -34,6 +34,7 @@ module Control.Comonad.Trans.Traced
   , listen
   , listens
   , censor
+  , explore
   ) where
 
 #if __GLASGOW_HASKELL__ < 710
@@ -108,6 +109,15 @@ listens g = TracedT . fmap (\f m -> (f m, g m)) . runTracedT
 
 censor :: Functor w => (m -> m) -> TracedT m w a -> TracedT m w a
 censor g = TracedT . fmap (. g) . runTracedT
+
+-- | Given a Functor containing the associated Monoid for a `TracedT`,
+-- `trace` each value within the functor and return the functor of results.
+--
+--   >>> let count = traced (\m -> m ++ " Missippi")
+--   >>> explore ["One", "Two", "Three"] count
+--   ["One Missippi", "Two Missippi", "Three Missippi"]
+explore :: (Comonad w, Functor f, Monoid m) => f m -> TracedT m w a -> f a
+explore ms w = flip trace w <$> ms
 
 #ifdef __GLASGOW_HASKELL__
 
